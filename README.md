@@ -1,11 +1,83 @@
 Table of Contents
 =================
 
-* [Homework-14 docker-1](#homework-14-docker-1)
-  * [Основное задание](#Основное-задание)
-  * [Задание со *](#Задание-со-)
-  
+   * [Table of Contents](#table-of-contents)
+      * [Homework-15 docker-2](#homework-15-docker-2)
+         * [Основное задание](#Основное-задание)
+      * [Homework-14 docker-1](#homework-14-docker-1)
+         * [Основное задание](#Основное-задание-1)
+         * [Задание со *](#Задание-со-)
+
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-15 docker-2
+
+### Основное задание
+
+Создан новый проект в GCP с названием docker.
+Gcloud SDK был установлен ранее поэтому сейчас была произведена только его инициализация командой:  
+```
+gcloud init
+```
+
+Настроена аутентификация:  
+```
+gcloud auth application-default login
+```
+Создан docker-machine:
+```
+docker-machine create --driver google \
+--google-project docker-181710 \
+--google-zone europe-west1-b \
+--google-machine-type g1-small \
+--google-machine-image $(gcloud compute images list --filter ubuntu-1604-lts --uri) \ docker-host
+```
+
+```
+NAME          ACTIVE   DRIVER   STATE     URL                         SWARM   DOCKER        ERRORS
+docker-host   *        google   Running   tcp://ip-address           v18.01.0-ce
+```
+(По понятным прикинам ip не указываю)
+
+```
+docker run --rm -ti tehbilly/htop
+```
+Htop показывает процессы внутри контейнера
+
+```
+docker run --rm --pid host -ti tehbilly/htop
+```
+Htop показывает процессы на хосте с docker контейнером
+
+Были созданы файлы Dockerfile, db_config, mongod.conf, start.sh
+Был создан обран:
+```
+docker build -t reddit:latest .
+```
+
+Так же запущен контейнер на нашем docker-host
+```
+docker run --name reddit -d --network=host reddit:latest
+```
+
+После создания правила с файрволле удалост подключиться к нашему приложению.
+Была произведена регистрации и запушин обран на [docker hub](https://hub.docker.com/r/mrgreyves/otus-reddit/).
+
+```
+docker tag reddit:latest mrgreyves/otus-reddit:1.0
+docker push mrgreyves/otus-reddit:1.0
+```
+
+Дополнительные команды:
+
+```
+#прибить docker-machine
+docker-machine rm name
+#удалить убраз
+docker rmi image_name
+#удалить контейнер
+docker rm con_id
+```
 
 ## Homework-14 docker-1  
 
