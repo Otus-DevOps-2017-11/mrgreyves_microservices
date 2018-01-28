@@ -1,5 +1,15 @@
-## Homework-14 docker-1 by Vladimir Drozdetskiy
+Table of Contents
+=================
 
+* [Homework-14 docker-1](#homework-14-docker-1)
+  * [Основное задание](#Основное-задание)
+  * [Задание со *](#Задание-со-)
+  
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-14 docker-1  
+
+### Основное задание
 Основное задание было выполнено без каких либо проблем. 
 Основные команды:
 
@@ -54,6 +64,6 @@ docker rmi
 
 ```
 
-###Задание со *
+### Задание со *
 
 Выводы по разнице вывода inspect для образа и контейнера в файле docker-1.log
