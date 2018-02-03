@@ -7,7 +7,7 @@ RUN git clone https://github.com/Artemmkin/reddit.git
 
 COPY mongod.conf /etc/mongod.conf
 COPY db_config /reddit/db_config
-COPY start.sh /start.sh
+COPY ../start.sh /start.sh
 
 RUN cd /reddit && bundle install
 RUN chmod 0777 /start.sh
