@@ -15,6 +15,54 @@ Table of Contents
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
+## Homework-17 docker-4
+### Основное задание
+
+В данном задании задании нами были протестированы сетевые возможности docker.  
+После запуска контейнера joffotron/docker-net-tools и запуска команды ifconfig  
+мы увидели что контейнеру доступен только loopback интерфейс. После запуска его в хостовой  
+сети мы увидели что контейнер теперь имеет доступ к сети хоста.  
+Проверили что будет если несколько раз запустить контейнер с nginx привязанный к  
+хостой сети:
+```
+docker run --network host -d nginx
+```
+Контейнер запускается первый раз и занимает 80 порт, запуск дополнительных контейнеров  
+не возможен так как сокет уже используется.  
+
+Когда мы запускаем контейнер в хостовой сети, новый сетевой namespace не создается.  
+Если же запускает с драйвером none то создается новый сетевой namespace.  
+
+Был создан наш docker-compose.yml в котором описано наше приложение. 
+Так же был создан файл .env в котором мы указали переменные окружения.
+```
+COMPOSE_PROJECT_NAME=reddit
+USERNAME=mrgreyves
+UI_VER=1.0
+POST_VER=1.0
+COMMENT_VER=1.0
+EXT_PORT=9292
+INT_PORT=9292
+
+```
+### Задание со *
+
+Имя проекта задается при помощи переменно окружения COMPOSE_PROJECT_NAME.
+Был docker-compose.override.yml в которм мы указавали переменные для разных частей нашего проекта. 
+[Официальная документация.](https://docs.docker.com/compose/extends/#example-use-case)
+```
+version: '3.3'
+services:
+
+  ui:
+    command: ["puma", "--debug", "-w", "2"]
+
+  comment:
+    command: ["puma", "--debug", "-w", "2"]
+
+```
+Для сервиса puma использовались паметры --debug и -w 2.
+
 
 ## Homework-16 docker-3
 
