@@ -69,17 +69,14 @@ docker build -t mrgreyves/ui:2.1 -f ./ui/Docker_small ./ui
 
 ### Задание со * 3
 
-Для дальнейшего уменьшения образа блок ENV был сгруппирован:
-```
-ENV APP_HOME /app \
-    POST_SERVICE_HOST post \
-    POST_SERVICE_PORT 5000 \
-    COMMENT_SERVICE_HOST comment \
-    COMMENT_SERVICE_PORT 9292
-```
-Так же вместо ADD был использован COPY:
+Вместо ADD был использован COPY:
 ```
 COPY . $APP_HOME
+```
+Был сгруппирован блок RUN:  
+```
+RUN apk add --no-cache build-base ruby ruby-json ruby-dev ruby-bundler && \
+    gem install bundler --no-ri --no-rdoc && bundle install && apk del build-base ruby-dev
 ```
 
 Образ соответственно еще уменьшился.
