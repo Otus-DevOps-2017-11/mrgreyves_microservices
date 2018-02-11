@@ -2,13 +2,84 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
-      * [Homework-15 docker-2](#homework-15-docker-2)
+      * [Homework-16 docker-3](#homework-16-docker-3)
          * [Основное задание](#Основное-задание)
-      * [Homework-14 docker-1](#homework-14-docker-1)
+         * [Задание со * 1](#Задание-со--1)
+         * [Задание со * 2](#Задание-со--2)
+         * [Задание со * 3](#Задание-со--3)
+      * [Homework-15 docker-2](#homework-15-docker-2)
          * [Основное задание](#Основное-задание-1)
+      * [Homework-14 docker-1](#homework-14-docker-1)
+         * [Основное задание](#Основное-задание-2)
          * [Задание со *](#Задание-со-)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+
+## Homework-16 docker-3
+
+### Основное задание
+
+Во время выполнения денного ДЗ мы создали образы для нашей микросервисной архитектуры.  
+Были созданы образы для comment, post, ui.  
+Во время собрки ui на docker-machine возникла ошибка, образ так и не собирался.  
+Пришлось пересоздать docker-machine использую в качестве шаблона g1-small вместо f1-micro (больше  
+оперативной памяти).
+
+### Задание со * 1
+
+Была создана новая сеть:
+```
+docker create network reddit_hw
+```
+Соответственно было созданы новые алиасы для наших контейнером, при это пришлось передавать  
+переменные окружения непосредственно в контейнер при помощи ключа -е:
+```
+docker run -d --network=reddit_hw --network-alias=post_db_hw --network-alias=comment_db_hw mongo:latest
+docker run -d --network=reddit_hw --network-alias=post_hw -e "POST_DATABASE_HOST=post_db_hw" mrgreyves/post:1.0
+docker run -d --network=reddit_hw --network-alias=comment_hw -e "COMMENT_DATABASE_HOST=comment_db_hw" mrgreyves/comment:1.0
+docker run -d --network=reddit_hw -p 9292:9292 -e "POST_SERVICE_HOST=post_hw" -e "COMMENT_SERVICE_HOST=comment_hw" mrgreyves/ui:1.0
+```
+После запуска наш сервис стартанул штатно.
+
+Был создан volume который был подключен к контейнеру с mongodb для хранения наших постов:
+```
+docker volume create reddit_db
+docker run -d --network=reddit --network-alias=post_db --network-alias=comment_db -v reddit_db:/data/db mongo:latest
+```
+Для просмотра volume используем комманду:  
+```
+docker volume ls
+```
+
+### Задание со * 2
+
+Был собран образ на основе alpine linux. Для установки приложений и обновления кеша  
+необходимо использовать комманду:
+```
+apk add --update
+```
+
+Для того что бы не переделывать файл Docker был создан файл Docker_small. Для того что  
+бы указать docker какой файл использовать для билда используем ключ -f:
+```
+docker build -t mrgreyves/ui:2.1 -f ./ui/Docker_small ./ui
+```
+
+
+### Задание со * 3
+
+Вместо ADD был использован COPY:
+```
+COPY . $APP_HOME
+```
+Был сгруппирован блок RUN:  
+```
+RUN apk add --no-cache build-base ruby ruby-json ruby-dev ruby-bundler && \
+    gem install bundler --no-ri --no-rdoc && bundle install && apk del build-base ruby-dev
+```
+
+Образ соответственно еще уменьшился.
 
 ## Homework-15 docker-2
 
