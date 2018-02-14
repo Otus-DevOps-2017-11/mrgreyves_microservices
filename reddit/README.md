@@ -14,7 +14,7 @@
 ```bash
 export SERVER_IP=<ip_address>   # public IP address of the target host
 export REPO_NAME=<account/name> # repo name to fetch the code from, e.g. Artemmkin/reddit
-export DEPLOY_USER=deploy       # username used to connect via SSH
+export DEPLOY_USER=deploy       # username used to connect via ssh
 ```
 3. Deploy using capistrano:
 ```bash
