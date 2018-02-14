@@ -26,7 +26,8 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 ### Основное задание
 
 Выполнил установку инстанса для gitlab-ci вручную. Во время установки при помощи  
-docker-machine, как в предыдущем ДЗ, все время высыпались разного рода ошибки.
+docker-machine, как в предыдущем ДЗ, все время высыпались разного рода ошибки.  
+Так же заметил что инстанс с 2мя ядрами работает на порядок быстрее.
 
 ```
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
