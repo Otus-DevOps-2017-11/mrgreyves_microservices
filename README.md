@@ -88,7 +88,7 @@ sudo docker exec -it gitlab-runner gitlab-runner register
 В интерактивном режиме настраиваем runner.
 
 ### Задание со * 1
-Была найден [мануал](https://github.com/sameersbn/docker-gitlab-ci-multi-runner#getting-started)
+Была найден [мануал](https://github.com/sameersbn/docker-gitlab-ci-multi-runner#getting-started).
 Так же вариант подойдет для docker-compose.
 Соответственно мы можем запускать дополнительные runner:
 ```
@@ -108,6 +108,7 @@ sudo docker exec -it gitlab-runner-2 gitlab-runner register --non-interactive \
  --locked=false \
  --docker-image alpine:latest 
 ```
+Настройка производится не в интерактивном режиме при помощи ключа --non-interactive.
 В итоге мы можем при помощи скрипта запустить и настроить несколько runner.
 
 ### Задание со * 2
