@@ -110,6 +110,26 @@ sudo docker exec -it gitlab-runner-2 gitlab-runner register --non-interactive \
 ```
 Настройка производится не в интерактивном режиме при помощи ключа --non-interactive.
 В итоге мы можем при помощи скрипта запустить и настроить несколько runner.
+Скрипт будет примерно такого плана:
+```
+for n in 1..N
+do
+sudo docker run -d --name gitlab-runner-${n} --restart always \
+   -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+   -v /var/run/docker.sock:/var/run/docker.sock \
+   gitlab/gitlab-runner:latest
+sudo docker exec -it gitlab-runner-${n} gitlab-runner register --non-interactive \
+ --description my-runner-${n} \
+ --url http://GIT-LAB-IP \
+ --registration-token REG-TOKEN \
+ --executor docker \
+ --run-untagged \
+ --locked=false \
+ --docker-image alpine:latest    
+   
+```
+Лучше делать это при помощи ansible, хотя самый оптимальный на мой взгляд это использовать  
+swarm или kubernetes.
 
 ### Задание со * 2
 Настроена интеграция со [slack.](https://devops-team-otus.slack.com/messages/C8CG4B8RH)
