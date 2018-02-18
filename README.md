@@ -2,25 +2,59 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
-      * [Homework-19 docker-6](#homework-19-docker-6)
+      * [Homework-20 docker-7](#homework-20-docker-7)
          * [Основное задание](#Основное-задание)
+      * [Homework-19 docker-6](#homework-19-docker-6)
+         * [Основное задание](#Основное-задание-1)
          * [Задание со * 1](#Задание-со--1)
          * [Задание со * 2](#Задание-со--2)
       * [Homework-17 docker-4](#homework-17-docker-4)
-         * [Основное задание](#Основное-задание-1)
+         * [Основное задание](#Основное-задание-2)
          * [Задание со *](#Задание-со-)
       * [Homework-16 docker-3](#homework-16-docker-3)
-         * [Основное задание](#Основное-задание-2)
+         * [Основное задание](#Основное-задание-3)
          * [Задание со * 1](#Задание-со--1-1)
          * [Задание со * 2](#Задание-со--2-1)
          * [Задание со * 3](#Задание-со--3)
       * [Homework-15 docker-2](#homework-15-docker-2)
-         * [Основное задание](#Основное-задание-3)
-      * [Homework-14 docker-1](#homework-14-docker-1)
          * [Основное задание](#Основное-задание-4)
+      * [Homework-14 docker-1](#homework-14-docker-1)
+         * [Основное задание](#Основное-задание-5)
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-20 docker-7
+### Основное задание
+
+В основной части задания был перенастроен pipeline с определением веток stage и production.  
+Так же для нового проекта был выбран runner который мы использовали для предыдущего.  
+Были описаны окружения stage и production, выкатку на которые можно сделать только руками  
+(опция manual и кнопка в pipeline).
+```
+production:
+  stage: production
+  when: manual
+```
+В pipeline были созданы ограничения для выкатки на stage и production только с явно  
+зафиксированной версией.
+```
+production:
+  stage: production
+  when: manual
+  only:
+    - /^\d+\.\d+.\d+/
+```
+Были определены динамические окружения:
+```
+branch review:
+  stage: review
+  script: echo "Deploy to $CI_ENVIRONMENT_SLUG"
+  environment:
+    name: branch/$CI_COMMIT_REF_NAME
+    url: http://$CI_ENVIRONMENT_SLUG.example.com
+```
+
 
 ## Homework-19 docker-6
 ### Основное задание
