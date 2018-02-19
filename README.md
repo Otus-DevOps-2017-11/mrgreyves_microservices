@@ -1,22 +1,143 @@
-TTable of Contents
+Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
-      * [Homework-17 docker-4](#homework-17-docker-4)
+      * [Homework-19 docker-6](#homework-19-docker-6)
          * [Основное задание](#Основное-задание)
-         * [Задание со *](#Задание-со-)
-      * [Homework-16 docker-3](#homework-16-docker-3)
-         * [Основное задание](#Основное-задание-1)
          * [Задание со * 1](#Задание-со--1)
          * [Задание со * 2](#Задание-со--2)
+      * [Homework-17 docker-4](#homework-17-docker-4)
+         * [Основное задание](#Основное-задание-1)
+         * [Задание со *](#Задание-со-)
+      * [Homework-16 docker-3](#homework-16-docker-3)
+         * [Основное задание](#Основное-задание-2)
+         * [Задание со * 1](#Задание-со--1-1)
+         * [Задание со * 2](#Задание-со--2-1)
          * [Задание со * 3](#Задание-со--3)
       * [Homework-15 docker-2](#homework-15-docker-2)
-         * [Основное задание](#Основное-задание-2)
-      * [Homework-14 docker-1](#homework-14-docker-1)
          * [Основное задание](#Основное-задание-3)
+      * [Homework-14 docker-1](#homework-14-docker-1)
+         * [Основное задание](#Основное-задание-4)
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-19 docker-6
+### Основное задание
+
+Выполнил установку инстанса для gitlab-ci вручную. Во время установки при помощи  
+docker-machine, как в предыдущем ДЗ, все время высыпались разного рода ошибки.  
+Так же заметил что инстанс с 2мя ядрами работает на порядок быстрее.
+
+```
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get install docker-ce docker-compose
+sudo mkdir -p /srv/gitlab/config /srv/gitlab/data /srv/gitlab/logs
+cd /srv/gitlab/
+sudo touch docker-compose.yml
+```
+
+Docker-compose файл для нашего gitlab:
+```
+web:
+  image: 'gitlab/gitlab-ce:latest'
+  restart: always
+  hostname: 'gitlab.example.com'
+  environment:
+    GITLAB_OMNIBUS_CONFIG: |
+      external_url 'http://<YOUR-VM-IP>'
+  ports:
+    - '80:80'
+    - '443:443'
+    - '2222:22'
+  volumes:
+    - '/srv/gitlab/config:/etc/gitlab'
+    - '/srv/gitlab/logs:/var/log/gitlab'
+    - '/srv/gitlab/data:/var/opt/gitlab'
+```
+Запускаем gitlab:
+```
+docker-compose up -d
+```
+
+Необходимо немного подождать так как gitlab запускается не мгновенно.
+Во время переустановки инстанса столкнулся с моментом когда удаленный репозиторий  
+уже указан, но у него не верный ip адрес.  
+```
+#просмотр всех  remote
+git remote -v
+#удаление  remote
+git remote remove remote_name
+
+```
+
+Был запущен контейнер с runner:
+```
+sudo docker run -d --name gitlab-runner --restart always \
+   -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+   -v /var/run/docker.sock:/var/run/docker.sock \
+   gitlab/gitlab-runner:latest
+```
+
+Регистрируем runner:
+```
+sudo docker exec -it gitlab-runner gitlab-runner register
+```
+В интерактивном режиме настраиваем runner.
+
+### Задание со * 1
+Была найден [мануал](https://github.com/sameersbn/docker-gitlab-ci-multi-runner#getting-started).
+Так же вариант подойдет для docker-compose.
+Соответственно мы можем запускать дополнительные runner:
+```
+sudo docker run -d --name gitlab-runner-2 --restart always \
+   -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+   -v /var/run/docker.sock:/var/run/docker.sock \
+   gitlab/gitlab-runner:latest
+```
+Настройка runner:
+```
+sudo docker exec -it gitlab-runner-2 gitlab-runner register --non-interactive \
+ --description my-runner-2 \
+ --url http://GIT-LAB-IP \
+ --registration-token REG-TOKEN \
+ --executor docker \
+ --run-untagged \
+ --locked=false \
+ --docker-image alpine:latest 
+```
+Настройка производится не в интерактивном режиме при помощи ключа --non-interactive.
+В итоге мы можем при помощи скрипта запустить и настроить несколько runner.
+Скрипт будет примерно такого плана:
+```
+for n in 1..N
+do
+sudo docker run -d --name gitlab-runner-${n} --restart always \
+   -v /srv/gitlab-runner/config:/etc/gitlab-runner \
+   -v /var/run/docker.sock:/var/run/docker.sock \
+   gitlab/gitlab-runner:latest
+sudo docker exec -it gitlab-runner-${n} gitlab-runner register --non-interactive \
+ --description my-runner-${n} \
+ --url http://GIT-LAB-IP \
+ --registration-token REG-TOKEN \
+ --executor docker \
+ --run-untagged \
+ --locked=false \
+ --docker-image alpine:latest    
+   
+```
+Лучше делать это при помощи ansible, хотя самый оптимальный на мой взгляд это использовать  
+swarm или kubernetes.
+
+### Задание со * 2
+Настроена интеграция со [slack.](https://devops-team-otus.slack.com/messages/C8CG4B8RH)
+Для того что бы приходили уведомления в slack не только при не удачных проходах  
+пайплайна нужно не ставить в Notify only broken pipelines.
+
+
+
 
 ## Homework-17 docker-4
 ### Основное задание
