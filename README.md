@@ -78,7 +78,7 @@ scrape_configs:
       - targets:
         - 'node-exporter:9100'
 ```
-Созданные нами образы были запуши в docker hub
+Созданные нами образы были запушины в [docker hub](https://hub.docker.com/u/mrgreyves/)
 ```
 docker push $USER_NAME/ui
 docker push $USER_NAME/comment
