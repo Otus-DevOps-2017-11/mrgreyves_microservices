@@ -2,27 +2,128 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
-      * [Homework-20 docker-7](#homework-20-docker-7)
+      * [Homework-21 monitoring-1](#homework-21-monitoring-1)
          * [Основное задание](#Основное-задание)
-      * [Homework-19 docker-6](#homework-19-docker-6)
-         * [Основное задание](#Основное-задание-1)
          * [Задание со * 1](#Задание-со--1)
          * [Задание со * 2](#Задание-со--2)
-      * [Homework-17 docker-4](#homework-17-docker-4)
+      * [Homework-20 docker-7](#homework-20-docker-7)
+         * [Основное задание](#Основное-задание-1)
+      * [Homework-19 docker-6](#homework-19-docker-6)
          * [Основное задание](#Основное-задание-2)
-         * [Задание со *](#Задание-со-)
-      * [Homework-16 docker-3](#homework-16-docker-3)
-         * [Основное задание](#Основное-задание-3)
          * [Задание со * 1](#Задание-со--1-1)
          * [Задание со * 2](#Задание-со--2-1)
+      * [Homework-17 docker-4](#homework-17-docker-4)
+         * [Основное задание](#Основное-задание-3)
+         * [Задание со *](#Задание-со-)
+      * [Homework-16 docker-3](#homework-16-docker-3)
+         * [Основное задание](#Основное-задание-4)
+         * [Задание со * 1](#Задание-со--1-2)
+         * [Задание со * 2](#Задание-со--2-2)
          * [Задание со * 3](#Задание-со--3)
       * [Homework-15 docker-2](#homework-15-docker-2)
-         * [Основное задание](#Основное-задание-4)
-      * [Homework-14 docker-1](#homework-14-docker-1)
          * [Основное задание](#Основное-задание-5)
+      * [Homework-14 docker-1](#homework-14-docker-1)
+         * [Основное задание](#Основное-задание-6)
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-21 monitoring-1
+### Основное задание
+
+В данном задании была произведена реорганизация нашего репозитория. (Навели в нем порядок)
+Созданы правила для открытия нужных портов
+```
+gcloud compute firewall-rules create prometheus-default --allow tcp:9090
+gcloud compute firewall-rules create puma-default --allow tcp:9292
+```  
+Был создан хост с docker-machine в котором запущен prometheus
+```
+docker run --rm -p 9090:9090 -d --name prometheus  prom/prometheus
+#узнать адрес машины с docker host
+docker-machine ip vm1
+```
+Создали prometheus.yml в котором указали настройки самого prometheus
+```
+global:
+  scrape_interval: '5s'
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+        - 'localhost:9090'
+```
+Так же мы использовали node-exporter который собирает информацию с docker хоста
+```
+  node-exporter:
+    image: prom/node-exporter
+    user: root
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points="^/(sys|proc|dev|host|etc)($$|/)"'
+    networks:
+      back_net:
+```
+
+Для node-exporter был добавлен соответствующий job в prometheus
+```
+  - job_name: 'node'
+    static_configs:
+      - targets:
+        - 'node-exporter:9100'
+```
+Созданные нами образы были запуши в docker hub
+```
+docker push $USER_NAME/ui
+docker push $USER_NAME/comment
+docker push $USER_NAME/post
+docker push $USER_NAME/prometheus
+```
+
+### Задание со * 1
+Был добавлен мониторинг mongo-db при помощи экспортера от [percona](https://github.com/percona/mongodb_exporter)  
+Для сборки использовалась вот эта [инструкция](https://github.com/dcu/mongodb_exporter)
+Был изменен файл конфигурации prometheus.
+Добавлен job для mongodb-exporter
+```
+  - job_name: 'node'
+    static_configs:
+      - targets:
+        - 'node-exporter:9100'
+```
+Образ prometheus был пересобран.
+
+### Задание со * 2
+Был добавлен мониторинг при помощи [blackbox](https://github.com/prometheus/blackbox_exporter) для наших сервисов: comment, post,ui
+В файле blackbox.yml настройки самого blackbox.
+Изменен конфиг prometheus
+```
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://comment:9292/healthcheck
+        - http://post:5000/healthcheck
+        - http://ui:9292/healthcheck
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+```
+Образ prometheus был пересобран.
+Образ blackbox так же доступен в [docker hub](https://hub.docker.com/r/prom/blackbox-exporter/)
+
 
 ## Homework-20 docker-7
 ### Основное задание
@@ -54,7 +155,6 @@ branch review:
     name: branch/$CI_COMMIT_REF_NAME
     url: http://$CI_ENVIRONMENT_SLUG.example.com
 ```
-
 
 ## Homework-19 docker-6
 ### Основное задание
