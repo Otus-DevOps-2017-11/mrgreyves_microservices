@@ -98,6 +98,8 @@ docker push $USER_NAME/prometheus
         - 'node-exporter:9100'
 ```
 Образ prometheus был пересобран.
+UPD: собран свой образ mongodb-exporter.
+
 
 ### Задание со * 2
 Был добавлен мониторинг при помощи [blackbox](https://github.com/prometheus/blackbox_exporter) для наших сервисов: comment, post,ui
@@ -123,6 +125,7 @@ docker push $USER_NAME/prometheus
 ```
 Образ prometheus был пересобран.
 Образ blackbox так же доступен в [docker hub](https://hub.docker.com/r/prom/blackbox-exporter/)
+UPD: собран свой образ blackbox-exporter.
 
 
 ## Homework-20 docker-7

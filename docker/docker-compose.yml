@@ -25,7 +25,7 @@ services:
       front_net:
 
   mongodb-exporter:
-    image: andywow/mongodb_exporter:latest
+    image: ${USER_NAME}/mongodb_exporter:${MON_VER}
     environment:
       MONGODB_URL: 'mongodb://post_db:27017'
     networks:
@@ -47,7 +47,7 @@ services:
       back_net:
 
   blackbox-exporter:
-    image: prom/blackbox-exporter
+    image: ${USER_NAME}/blackbox-exporter:${BLE_VER}
     networks:
       front_net:
       back_net:
