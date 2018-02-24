@@ -1,0 +1,11 @@
+REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
+mrgreyves/ubuntu-tmp-file   latest              ef4bd6fcb60d        54 seconds ago      112MB
+ubuntu                      16.04               0458a4468cbc        22 hours ago        112MB
+nginx                       latest              3f8a4339aadd        4 weeks ago         108MB
+hello-world                 latest              f2a91732366c        2 months ago        1.85kB
+
+Для более удобного сравнение решил вывод команды docker inspect перенаправить в в файл.
+Разница в выводе на мой взгляд заключается в том что мы как раз и сравниваем контейнер и образ.
+В выводе inspect  для контейнера мы получаем полную информацию о нем: сеть, образ, хостнейм, выделенные ресурсы
+(cpu, memory)и тд.
+В выводе inspect  для образа информация о том какой образ, из какого репозитория скачан, описание оболочки и тд.

@@ -1,2 +1,6 @@
 .DS_Store
 .env
+build_info.txt
+blackbox_exporter
+mongodb_exporter
+
