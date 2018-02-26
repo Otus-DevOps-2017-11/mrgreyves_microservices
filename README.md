@@ -165,7 +165,7 @@ COPY dashboards/*.json /var/lib/grafana/dashboards/
   "experimental" : true
 }
 ```
-
+Созданные нами образы были запушины в [docker hub](https://hub.docker.com/u/mrgreyves/)
 
 
 
