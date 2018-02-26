@@ -2,31 +2,172 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
-      * [Homework-21 monitoring-1](#homework-21-monitoring-1)
+      * [Homework-22 monitoring-2](#homework-22-monitoring-2)
          * [Основное задание](#Основное-задание)
+         * [Задание со *](#Задание-со-)
+      * [Homework-21 monitoring-1](#homework-21-monitoring-1)
+         * [Основное задание](#Основное-задание-1)
          * [Задание со * 1](#Задание-со--1)
          * [Задание со * 2](#Задание-со--2)
       * [Homework-20 docker-7](#homework-20-docker-7)
-         * [Основное задание](#Основное-задание-1)
-      * [Homework-19 docker-6](#homework-19-docker-6)
          * [Основное задание](#Основное-задание-2)
+      * [Homework-19 docker-6](#homework-19-docker-6)
+         * [Основное задание](#Основное-задание-3)
          * [Задание со * 1](#Задание-со--1-1)
          * [Задание со * 2](#Задание-со--2-1)
       * [Homework-17 docker-4](#homework-17-docker-4)
-         * [Основное задание](#Основное-задание-3)
-         * [Задание со *](#Задание-со-)
-      * [Homework-16 docker-3](#homework-16-docker-3)
          * [Основное задание](#Основное-задание-4)
+         * [Задание со *](#Задание-со--3)
+      * [Homework-16 docker-3](#homework-16-docker-3)
+         * [Основное задание](#Основное-задание-5)
          * [Задание со * 1](#Задание-со--1-2)
          * [Задание со * 2](#Задание-со--2-2)
-         * [Задание со * 3](#Задание-со--3)
+         * [Задание со * 3](#Задание-со--3-1)
       * [Homework-15 docker-2](#homework-15-docker-2)
-         * [Основное задание](#Основное-задание-5)
-      * [Homework-14 docker-1](#homework-14-docker-1)
          * [Основное задание](#Основное-задание-6)
+      * [Homework-14 docker-1](#homework-14-docker-1)
+         * [Основное задание](#Основное-задание-7)
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-22 monitoring-2
+### Основное задание
+
+Была произведена разбивка наших docker compose файлов.  
+В docker-compose.yml были описаны сервисы, в docker-compose-monitoring.yml описаны сервисы мониторинга.
+Для заспуска docker-compose с другим файлом использовали комманду:
+```
+docker-compose -f docker-compose-monitoring.yml up -d
+``` 
+
+В мониторинг был добавлен [cAdvisor](https://github.com/google/cadvisor) для мониторинга  
+наших контейнеров.
+```
+  cadvisor:
+    image: google/cadvisor:v0.29.0
+    volumes:
+      - '/:/rootfs:ro'
+      - '/var/run:/var/run:rw'
+      - '/sys:/sys:ro'
+      - '/var/lib/docker/:/var/lib/docker:ro'
+    ports:
+      - '8080:8080'
+    networks:
+      front_net:
+      back_net:
+```
+И открыты для него необходимые порты в gcp:
+```
+gcloud compute firewall-rules create cadvisor-default --allow tcp:8080
+```
+Была добавлена grafana для построения графиков из prometeus:
+```
+  grafana:
+    image: ${USER_NAME}/grafana:${GRAF_VER}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=secret
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    networks:
+      front_net:
+      back_net:
+```
+
+Открыты необходимые порты в gcp:
+```
+gcloud compute firewall-rules create grafana-default --allow tcp:3000
+```
+Так же были настроены свои дашборды и добавлен дашборд для Docker из [хранилища](https://grafana.com/dashboards)
+Был добавлен alertmanager для отправки оповещений с разными статусами:
+```
+  alertmanager:
+      image: ${USER_NAME}/alertmanager
+      command:
+        - '--config.file=/etc/alertmanager/config.yml'
+      ports:
+        - 9093:9093
+      networks:
+        front_net:
+        back_net:
+```
+Настроена отправка нотификаций в slack:
+```
+  slack_api_url: 'https://hooks.slack.com/services/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'
+
+route:
+  receiver: 'slack-notifications'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#vladimir_d_hw'
+
+```
+В prometheus добалены оповещения:
+```
+groups:
+  - name: alert.rules
+    rules:
+    - alert: InstanceDown
+      expr: up == 0
+      for: 1m
+      labels:
+        severity: page
+      annotations:
+        description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute'
+        summary: 'Instance {{ $labels.instance }} down'
+```
+### Задание со *
+Был создан алерт срабатывающий на большое время записи на диск:
+```
+    - alert: InstanceDown
+      expr: rate(node_disk_write_time_ms[1m]) > 5
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        description: '{{ $labels.instance }} of job {{ $labels.job }} has a large recording time than 1 minute'
+        summary: 'Instance {{ $labels.instance }} disk critical'
+```
+Настроена интеграция с почтой:
+```
+  smtp_auth_username: 'somebody@email.com'
+  smtp_auth_password: 'pa$$W0rd'
+  smtp_from: 'somebody@email.com'
+  smtp_smarthost: 'smtp.yandex.ru:465'
+  smtp_require_tls: false
+#в качестве примера
+```
+Был собран образ grafana включающий в себя настроенные дашборды и источники данных:
+```
+FROM grafana/grafana:5.0.0-beta4
+
+COPY datasource.yml /etc/grafana/provisioning/datasources/datasource.yml
+COPY dashboards.yml /etc/grafana/provisioning/dashboards/dashboards.yml
+COPY dashboards/*.json /var/lib/grafana/dashboards/
+
+```
+
+Настроена интеграция со [stackdriver](https://github.com/frodenas/stackdriver_exporter)
+Как и в example удалось вытащить compute.googleapis.com/instance/cpu,compute.googleapis.com/instance/disk
+Настроена интеграция prometheus с docker.
+По [инструкции](https://docs.docker.com/config/thirdparty/prometheus/#configure-docker) был настроен docker-daemon.  
+В конфиг были добавлены следующие строки:
+```
+{
+  "metrics-addr" : "0.0.0.0:9323",
+  "experimental" : true
+}
+```
+
+
+
 
 ## Homework-21 monitoring-1
 ### Основное задание

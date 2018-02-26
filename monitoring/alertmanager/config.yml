@@ -1,0 +1,19 @@
+global:
+
+  smtp_auth_username: 'somebody@email.com'
+  smtp_auth_password: 'pa$$W0rd'
+  smtp_from: 'somebody@email.com'
+  smtp_smarthost: 'smtp.yandex.ru:465'
+  smtp_require_tls: false
+
+  slack_api_url: 'https://hooks.slack.com/services/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'
+
+route:
+  receiver: 'slack-notifications'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#vladimir_d_hw'
+  email_configs:
+  - to: 'somebody@email.com'
