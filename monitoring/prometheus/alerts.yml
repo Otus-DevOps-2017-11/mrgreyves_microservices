@@ -1,0 +1,20 @@
+groups:
+  - name: alert.rules
+    rules:
+    - alert: InstanceDown
+      expr: up == 0
+      for: 1m
+      labels:
+        severity: page
+      annotations:
+        description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute'
+        summary: 'Instance {{ $labels.instance }} down'
+
+    - alert: InstanceDown
+      expr: rate(node_disk_write_time_ms[1m]) > 5
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        description: '{{ $labels.instance }} of job {{ $labels.job }} has a large recording time than 1 minute'
+        summary: 'Instance {{ $labels.instance }} disk critical'
