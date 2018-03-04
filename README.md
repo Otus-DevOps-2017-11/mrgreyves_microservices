@@ -31,6 +31,27 @@ Table of Contents
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
+## Homework-25 logging-1
+### Основное задание
+В данном дз мы обновили наши приложения. Была добавлена поддержка отправки логов.  
+При обновлении из стороннего репозитория не забываем оставить Dockerfile для наших приложений.  
+Пересобрали все образы одной коммандой:
+```
+for i in ui post-py comment; do cd src/$i; bash docker_build.sh; cd -; done
+```
+Был создан инстанс в GCP, так же не забываем указывать регион размещения.  
+Был запущен стек EFK (Elasticsearch, Fluentd, Kibana).  
+Для Fluentd мы собрали отдельный образ с файлом конфигурации.  
+Был настроен парсинк логов при помощи шаблонов GROK.  
+```
+grok_pattern service=%{WORD:service} \| event=%{WORD:event} \| request_id=%{GREEDYDATA:request_id} \| message='%{GREEDYDATA:message}'
+```
+Для распределенного трейскинга был добавлен Zipkin. Post имеет в своем коде прямую зависимость,  
+по этому он валит ошибку пока не запущен ZIpkin (на запуск требуется какое то время).  
+Так же Zipkin и Post должны находится в одной сети.
+
+
+
 ## Homework-22 monitoring-2
 ### Основное задание
 
