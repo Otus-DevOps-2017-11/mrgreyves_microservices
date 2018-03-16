@@ -2,36 +2,165 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
-      * [Homework-25 logging-1](#homework-25-logging-1)
+      * [Homework-27 swarm-1](#homework-27-swarm-1)
          * [Основное задание](#Основное-задание)
-      * [Homework-22 monitoring-2](#homework-22-monitoring-2)
+         * [Задание со ***](#Задание-со-)
+      * [Homework-25 logging-1](#homework-25-logging-1)
          * [Основное задание](#Основное-задание-1)
-         * [Задание со *](#Задание-со-)
-      * [Homework-21 monitoring-1](#homework-21-monitoring-1)
+      * [Homework-22 monitoring-2](#homework-22-monitoring-2)
          * [Основное задание](#Основное-задание-2)
-         * [Задание со * 1](#Задание-со--1)
+         * [Задание со *](#Задание-со--1)
+      * [Homework-21 monitoring-1](#homework-21-monitoring-1)
+         * [Основное задание](#Основное-задание-3)
+         * [Задание со * 1](#Задание-со--1-1)
          * [Задание со * 2](#Задание-со--2)
       * [Homework-20 docker-7](#homework-20-docker-7)
-         * [Основное задание](#Основное-задание-3)
-      * [Homework-19 docker-6](#homework-19-docker-6)
          * [Основное задание](#Основное-задание-4)
-         * [Задание со * 1](#Задание-со--1-1)
+      * [Homework-19 docker-6](#homework-19-docker-6)
+         * [Основное задание](#Основное-задание-5)
+         * [Задание со * 1](#Задание-со--1-2)
          * [Задание со * 2](#Задание-со--2-1)
       * [Homework-17 docker-4](#homework-17-docker-4)
-         * [Основное задание](#Основное-задание-5)
+         * [Основное задание](#Основное-задание-6)
          * [Задание со *](#Задание-со--3)
       * [Homework-16 docker-3](#homework-16-docker-3)
-         * [Основное задание](#Основное-задание-6)
-         * [Задание со * 1](#Задание-со--1-2)
+         * [Основное задание](#Основное-задание-7)
+         * [Задание со * 1](#Задание-со--1-3)
          * [Задание со * 2](#Задание-со--2-2)
          * [Задание со * 3](#Задание-со--3-1)
       * [Homework-15 docker-2](#homework-15-docker-2)
-         * [Основное задание](#Основное-задание-7)
-      * [Homework-14 docker-1](#homework-14-docker-1)
          * [Основное задание](#Основное-задание-8)
+      * [Homework-14 docker-1](#homework-14-docker-1)
+         * [Основное задание](#Основное-задание-9)
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-27 swarm-1
+### Основное задание
+
+Создаем нам кластер docker-swarm
+```
+#master
+docker-machine create --driver google \
+   --google-project  docker-182408  \
+   --google-zone europe-west1-b \
+   --google-machine-type g1-small \
+   --google-machine-image $(gcloud compute images list --filter ubuntu-1604-lts --uri) \
+   master-1
+```
+```
+#worker
+docker-machine create --driver google \
+   --google-project  docker-182408  \
+   --google-zone europe-west1-b \
+   --google-machine-type g1-small \
+   --google-machine-image $(gcloud compute images list --filter ubuntu-1604-lts --uri) \
+   worker-1
+```
+Все воркеры создаются аналогично.  
+Подключаемся к мастер ноде и создаем кластер docker swarm:  
+```
+docker swarm init
+```
+Для подключения воркека к мастеру используем комманду:  
+```
+docker swarm join --token OUR_TOKEN MASTER_IP:2377
+```
+Просмотр нод в кластере:  
+```
+docker node ls
+```
+
+Далее начинаем создавать на stack. В качестве основы используем созданный ранее docker-compose файл  
+Команды для работы со стеком:  
+```
+docker stack deploy/rm/services/ls STACK_NAME
+```
+
+Диплой стека:  
+```
+docker stack deploy --compose-file=<(docker-compose -f docker-compose.yml config 2>/dev/null) DEV  
+#Используем env для docker swarm
+#DEV - название окружения
+```
+Просмотр состояния стека (Сводная информация по сервисам):
+```
+docker stack services DEV
+```
+Добавление лейблов к нужной ноде:  
+```
+docker node update --label-add reliability=high master-
+```
+
+Просмотр лейблов на всех нодах:  
+```
+docker node ls -q | xargs docker node inspect  -f '{{ .ID }} [{{ .Description.Hostname }}]: {{ .Spec.Labels }}'
+```
+
+Для указания конкретного размещения сервиса добавляем конструкцию:  
+```
+deploy:
+      placement:
+        constraints:
+          - node.labels.reliability == high
+```
+
+Для масштабирования сервисов используем:  
+```
+deploy:
+      mode: replicated
+      replicas: 2
+```
+Так же можно использовать масштабирование сервисов на лету:  
+```
+docker service scale DEV_ui=3
+```
+
+```
+docker service update --replicas 3 DEV_ui
+```
+
+Выключение всех задач сервиса:  
+```
+docker service update --replicas 0 DEV_ui
+```
+
+Для обновления сервисов используем следующую конструкцию:  
+```
+update_config:
+        delay: 5s #задержка
+        parallelism: 1 #сколько обновлять одновременно
+        failure_action: pause #что делать в случаи аварии
+```
+
+Для ограничение ресурсов на сервисы используем следующую конструкцию:  
+```
+resources:
+        limits:
+          cpus: '0.30'
+          memory: 300M
+```
+
+Для определения действий в случае завершения работы контейнера используем следующее:  
+```
+restart_policy:
+    condition: on-failure#состояние
+    max_attempts: 15#количество попыток
+    delay: 1s#задержка
+```
+### Задание со ***
+Для определения переменных (env) для разных окружений можно использовать следующую конструкцию:  
+```
+services:
+  post_db:
+    env_file:
+      - .env
+
+```
+Взята из [официального мануала](https://docs.docker.com/compose/environment-variables/#the-env-file)  
+То есть для compose файлов разных окружений нам нужно указать необходимый env файл (.env_DEV, .env_STAGE, .env_PROD)  
+
 
 ## Homework-25 logging-1
 ### Основное задание
@@ -51,6 +180,8 @@ grok_pattern service=%{WORD:service} \| event=%{WORD:event} \| request_id=%{GREE
 Для распределенного трейскинга был добавлен Zipkin. Post имеет в своем коде прямую зависимость,  
 по этому он валит ошибку пока не запущен ZIpkin (на запуск требуется какое то время).  
 Так же Zipkin и Post должны находится в одной сети.
+
+
 
 
 
