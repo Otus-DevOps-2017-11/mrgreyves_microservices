@@ -2,6 +2,7 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
+      * [Homework-28 kubernetes-1](#homework-28-kubernetes-1)
       * [Homework-27 swarm-1](#homework-27-swarm-1)
          * [Основное задание](#Основное-задание)
          * [Задание со *](#Задание-со-)
@@ -36,6 +37,214 @@ Table of Contents
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-28 kubernetes-1
+
+Согласно данному [туториалу](https://github.com/kelseyhightower/kubernetes-the-hard-way) был развернут класте kubernetes.  
+По пунктам:
+
+1. Prerequisites
+
+Проверяем версию gcloud и при необходимости обновляемся:  
+```
+Google Cloud SDK 193.0.0
+bq 2.0.30
+core 2018.03.09
+gsutil 4.28
+```
+
+```
+Vladimir:kubernetes vladimir$ gcloud config get-value compute/region
+Your active configuration is: [docker]
+europe-west1-b
+Vladimir:kubernetes vladimird$ gcloud config get-value compute/zone
+Your active configuration is: [docker]
+europe-west1
+```
+
+2. Installing the Client Tools
+
+Устанавливаем cfssl и cfssljson
+
+```
+Vladimir:kubernetes vladimir$ cfssl version
+Version: 1.3.0
+Revision: dev
+Runtime: go1.10
+```
+Для Mac OS лучше использовать brew:
+```
+brew install cfssl
+```
+
+3. Provisioning Compute Resources
+
+Создаем сеть:
+```
+gcloud compute networks create kubernetes-the-hard-way --subnet-mode custom
+```
+Создаем подсеть:
+```
+gcloud compute networks subnets create kubernetes \
+  --network kubernetes-the-hard-way \
+  --range 10.240.0.0/24
+```
+Создаем правила файрволла:
+```
+gcloud compute firewall-rules create kubernetes-the-hard-way-allow-internal \
+  --allow tcp,udp,icmp \
+  --network kubernetes-the-hard-way \
+  --source-ranges 10.240.0.0/24,10.200.0.0/16
+  
+gcloud compute firewall-rules create kubernetes-the-hard-way-allow-external \
+  --allow tcp:22,tcp:6443,icmp \
+  --network kubernetes-the-hard-way \
+  --source-ranges 0.0.0.0/0
+  
+Vladimir:kubernetes vladimir$ gcloud compute firewall-rules list --filter="network:kubernetes-the-hard-way"
+NAME                                         NETWORK                  DIRECTION  PRIORITY  ALLOW                 DENY
+kubernetes-the-hard-way-allow-external       kubernetes-the-hard-way  INGRESS    1000      tcp:22,tcp:6443,icmp
+kubernetes-the-hard-way-allow-internal       kubernetes-the-hard-way  INGRESS    1000      tcp,udp,icmp
+kubernetes-the-hard-way-allow-nginx-service  kubernetes-the-hard-way  INGRESS    1000      tcp:32038
+```
+
+Создаем инстансы (контроллеры и воркеры):
+
+```
+Vladimir:kubernetes vladimir$ gcloud compute instances list
+NAME          ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP     STATUS
+controller-0  europe-west1-b  n1-standard-1               10.240.0.10  35.195.108.247  RUNNING
+controller-1  europe-west1-b  n1-standard-1               10.240.0.11  35.189.216.245  RUNNING
+controller-2  europe-west1-b  n1-standard-1               10.240.0.12  35.205.23.228   RUNNING
+worker-0      europe-west1-b  n1-standard-1               10.240.0.20  35.187.125.31   RUNNING
+worker-1      europe-west1-b  n1-standard-1               10.240.0.21  104.199.43.161  RUNNING
+worker-2      europe-west1-b  n1-standard-1               10.240.0.22  35.195.231.154  RUNNING
+```
+4 - 6. Создаем сертификаты и конфиги, ничего сложного и интересно.  
+
+7. etcd Cluster
+
+Создаем кластер etcd. Проверяем что все ноды работают:  
+
+```
+vladimir@controller-0:~$ ETCDCTL_API=3 etcdctl member list
+3a57933972cb5131, started, controller-2, https://10.240.0.12:2380, https://10.240.0.12:2379
+f98dc20bce6225a0, started, controller-0, https://10.240.0.10:2380, https://10.240.0.10:2379
+ffed16798470cab5, started, controller-1, https://10.240.0.11:2380, https://10.240.0.11:2379
+```
+8. Load Balancer
+
+Создаем балансировщик для kubernetes:  
+
+```
+Vladimir:kubernetes vladimir$ curl --cacert ca.pem https://${KUBERNETES_PUBLIC_ADDRESS}:6443/version
+
+{
+  "major": "1",
+  "minor": "9",
+  "gitVersion": "v1.9.0",
+  "gitCommit": "925c127ec6b946659ad0fd596fa959be43f0cc05",
+  "gitTreeState": "clean",
+  "buildDate": "2017-12-15T20:55:30Z",
+  "goVersion": "go1.9.2",
+  "compiler": "gc",
+  "platform": "linux/amd64"
+}
+```
+9. Worker Nodes
+
+```
+Vladimir:kubernetes vladimir$ kubectl get nodes
+NAME       STATUS    ROLES     AGE       VERSION
+worker-0   Ready     <none>    52m       v1.9.0
+worker-1   Ready     <none>    49m       v1.9.0
+worker-2   Ready     <none>    46m       v1.9.0
+```
+
+10. Configuring kubectl for Remote Access
+
+```
+MacBook-Pro-Vladimir:kubernetes vladimirdrozdeckij$ kubectl get componentstatuses
+NAME                 STATUS    MESSAGE              ERROR
+scheduler            Healthy   ok
+controller-manager   Healthy   ok
+etcd-2               Healthy   {"health": "true"}
+etcd-1               Healthy   {"health": "true"}
+etcd-0               Healthy   {"health": "true"}
+MacBook-Pro-Vladimir:kubernetes vladimirdrozdeckij$ kubectl get nodes
+NAME       STATUS    ROLES     AGE       VERSION
+worker-0   Ready     <none>    54m       v1.9.0
+worker-1   Ready     <none>    50m       v1.9.0
+worker-2   Ready     <none>    47m       v1.9.0
+```
+11. Provisioning Pod Network Routes
+
+```
+Vladimir:kubernetes vladimird$ gcloud compute routes list --filter "network: kubernetes-the-hard-way"
+NAME                            NETWORK                  DEST_RANGE     NEXT_HOP                  PRIORITY
+default-route-048170f7e9f72122  kubernetes-the-hard-way  10.240.0.0/24                            1000
+default-route-06b8f6cb1082999d  kubernetes-the-hard-way  0.0.0.0/0      default-internet-gateway  1000
+kubernetes-route-10-200-0-0-24  kubernetes-the-hard-way  10.200.0.0/24  10.240.0.20               1000
+kubernetes-route-10-200-1-0-24  kubernetes-the-hard-way  10.200.1.0/24  10.240.0.21               1000
+kubernetes-route-10-200-2-0-24  kubernetes-the-hard-way  10.200.2.0/24  10.240.0.22               1000
+```
+12. DNS
+
+```
+Vladimir:kubernetes vladimird$ kubectl create -f https://storage.googleapis.com/kubernetes-the-hard-way/kube-dns.yaml
+
+service "kube-dns" created
+serviceaccount "kube-dns" created
+configmap "kube-dns" created
+deployment "kube-dns" created
+
+Vladimir:kubernetes vladimir$ kubectl get pods -l k8s-app=kube-dns -n kube-system
+NAME                        READY     STATUS    RESTARTS   AGE
+kube-dns-6c857864fb-6qwk9   3/3       Running   0          44m
+```
+
+13. Smoke Test
+
+```
+Vladimir:kubernetes vladimir$ kubectl get pods -l run=nginx
+NAME                   READY     STATUS    RESTARTS   AGE
+nginx-8586cf59-qvk55   1/1       Running   0          40m
+
+Vladimir:kubernetes vladimir$ kubectl logs $POD_NAME
+127.0.0.1 - - [18/Mar/2018:19:20:17 +0000] "HEAD / HTTP/1.1" 200 0 "-" "curl/7.54.0" "-"
+10.240.0.20 - - [18/Mar/2018:19:21:50 +0000] "HEAD / HTTP/1.1" 200 0 "-" "curl/7.54.0" "-"
+
+Vladimir:kubernetes vladimir$ kubectl exec -ti $POD_NAME -- nginx -v
+nginx version: nginx/1.13.9
+
+Vladimir:kubernetes vladimir$ curl -I http://${EXTERNAL_IP}:${NODE_PORT}
+HTTP/1.1 200 OK
+Server: nginx/1.13.9
+Date: Sun, 18 Mar 2018 20:01:04 GMT
+Content-Type: text/html
+Content-Length: 612
+Last-Modified: Tue, 20 Feb 2018 12:21:20 GMT
+Connection: keep-alive
+ETag: "5a8c12c0-264"
+Accept-Ranges: bytes
+```
+
+14. Cleaning Up
+
+Разбираем наш стенд согласно инструкциям в туториале.  
+
+15. Задание
+
+```
+Vladimir:kubernetes vladimir$ kubectl get pods
+NAME                                  READY     STATUS    RESTARTS   AGE
+busybox-855686df5d-mb6jz              1/1       Running   0          46m
+comment-deployment-79b8869764-zcf5z   1/1       Running   0          32m
+mongo-deployment-74cccfb8-jmrld       1/1       Running   0          32m
+nginx-8586cf59-qvk55                  1/1       Running   0          43m
+post-deployment-7f844c5b88-txbvn      1/1       Running   0          32m
+ui-deployment-9c557b8b4-8mzvw         1/1       Running   0          32m
+```
 
 ## Homework-27 swarm-1
 ### Основное задание
