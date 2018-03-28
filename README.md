@@ -2,6 +2,7 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
+      * [Homework-29 kubernetes-2](#homework-29-kubernetes-2)
       * [Homework-28 kubernetes-1](#homework-28-kubernetes-1)
       * [Homework-27 swarm-1](#homework-27-swarm-1)
          * [Основное задание](#Основное-задание)
@@ -37,6 +38,48 @@ Table of Contents
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-29 kubernetes-2
+
+Для установки minikube используем комманду:  
+```
+brew cask install minikube
+```
+
+```
+#запускаем локальный кластер, по умолчанию драйвер для virtualbox
+minikube start
+
+#просмотр нод кластера
+kubectl get nodes
+
+#просмотр текущего контекста
+kubectl config current-context
+
+#просмотр всех контекстов
+kubectl config get-contexts
+```
+
+Для приложений ui, post, mongo, comment было созданы deployment.yml файлы с  
+описанием их состояний. Для связки приложений между собой были созданы файлы  
+service.yml
+
+```
+#запуск компонента ui
+kubectl apply -f ui-deployment.yml
+
+#просмотр всех сервисов
+minikube services list
+
+```
+
+Был поднят кластер kubernetes в GCP, созданы правила firewall после чего приложение было  
+задеплоено в этот кластер. [Скриншот](https://cloud.mail.ru/public/PGGm/ixDTbSzVb)
+
+Так же был настроен дашборд kubernetes, создан аккаунт.
+
+
+
 
 ## Homework-28 kubernetes-1
 
