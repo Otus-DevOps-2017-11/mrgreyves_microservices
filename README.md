@@ -2,6 +2,7 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
+      * [Homework-30 kubernetes-3](#homework-30-kubernetes-3)
       * [Homework-29 kubernetes-2](#homework-29-kubernetes-2)
       * [Homework-28 kubernetes-1](#homework-28-kubernetes-1)
       * [Homework-27 swarm-1](#homework-27-swarm-1)
@@ -38,6 +39,36 @@ Table of Contents
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-30 kubernetes-3
+
+Был настроен Loadbalancer для нашего сервиса ui. Сервис был успешно доступен.
+После этого был настроен сервис Ingrees. Ingrees конфигурировался у меня до 10.
+Был создал самоподписной сертификат и загружен в кластер:
+
+```
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=IP"
+kubectl create secret tls ui-ingress --key tls.key --cert tls.crt -n dev
+```
+
+Протокл http автоматически не удалился, пришлось пересоздать Ingrees. (Ушло порядка 10 минут на пересоздание)
+
+Был создан диск:
+
+```
+gcloud compute disks create --size=25GB --zone=europe-west1-b reddit-mongo-disk
+```
+
+```
+ kubectl get persistentvolume -n dev
+ 
+ NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM                   STORAGECLASS   REASON    AGE
+pvc-277cf72e-35df-11e8-af86-42010a840fcd   25Gi       RWO            Delete           Bound       dev/mongo-pvc           standard                 6m
+pvc-b473398b-35df-11e8-af86-42010a840fcd   10Gi       RWO            Delete           Bound       dev/mongo-pvc-dynamic   fast                     2m
+reddit-mongo-disk                          25Gi       RWO            Retain           Available                                                    7m
+```
+
+Был создан новый тип диска SSD и для создан свой Claim
 
 ## Homework-29 kubernetes-2
 

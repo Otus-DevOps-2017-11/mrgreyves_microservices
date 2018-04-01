@@ -3,4 +3,6 @@
 build_info.txt
 blackbox_exporter
 mongodb_exporter
+tls.crt
+tls.key
 
