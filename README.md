@@ -2,6 +2,7 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
+      * [Homework-31 kubernetes-4](#homework-31-kubernetes-4)
       * [Homework-30 kubernetes-3](#homework-30-kubernetes-3)
       * [Homework-29 kubernetes-2](#homework-29-kubernetes-2)
       * [Homework-28 kubernetes-1](#homework-28-kubernetes-1)
@@ -39,6 +40,11 @@ Table of Contents
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-31 kubernetes-4
+
+Был создан кластер кубернетиса, настроен helm и описаны чарты для деплоя нашего приложения.  
+Был настроен gitlab, настроены pipeline для выкатки приложения в разные среды.
 
 ## Homework-30 kubernetes-3
 
