@@ -5,4 +5,3 @@ blackbox_exporter
 mongodb_exporter
 tls.crt
 tls.key
-.Gitlab_ci
