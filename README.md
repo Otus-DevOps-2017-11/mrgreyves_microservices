@@ -2,6 +2,7 @@ Table of Contents
 =================
 
    * [Table of Contents](#table-of-contents)
+      * [Homework-32 kubernetes-5](#homework-32-kubernetes-5)
       * [Homework-31 kubernetes-4](#homework-31-kubernetes-4)
       * [Homework-30 kubernetes-3](#homework-30-kubernetes-3)
       * [Homework-29 kubernetes-2](#homework-29-kubernetes-2)
@@ -40,6 +41,38 @@ Table of Contents
          * [Задание со *](#Задание-со--4)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
+
+## Homework-32 kubernetes-5
+
+В данном домашнем задании были установлены prometeus, EFK.
+Для мониторинга всех компонентов по отдельности были созданы job в prometheus:
+
+```
+        relabel_configs:
+          - source_labels: [
+              __meta_kubernetes_service_label_app,
+              __meta_kubernetes_service_label_component,
+              __meta_kubernetes_namespace]
+            action: keep
+            regex: reddit;ui;(production|staging)+
+          - action: labelmap
+            regex: __meta_kubernetes_service_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: kubernetes_name
+```
+
+Установлена grafana, добавлена переменная при помощи которой можно указывать нужно окружение для мониторинга.  
+Изменен дашборд:
+
+```
+rate(ui_request_count{kubernetes_namespace=~"$namespace"}[1m])
+```
+
+Так же был подня alertmanager. Для его деплоя необходимо изменить значение в custom_values.yml.  
+Так же необходимо указать engress для него.  
+Так же был поднят стек EFK.
 
 ## Homework-31 kubernetes-4
 
